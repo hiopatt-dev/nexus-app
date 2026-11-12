@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Nexus UP</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    @keyframes modalPop {
+      0% { transform: scale(0.85) translateY(15px); opacity: 0; }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    .modal-animation {
+      animation: modalPop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+    @keyframes neonPulse {
+      0%, 100% { filter: drop-shadow(0 0 6px rgba(234,179,8,0.5)); }
+      50% { filter: drop-shadow(0 0 14px rgba(234,179,8,0.9)); }
+    }
+    .neon-star {
+      animation: neonPulse 2s infinite ease-in-out;
+    }
+    body {
+      background-color: #09080d;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+    const API_URL = "https://nexus-up-backend.onrender.com";
+
+    function App() {
+      const [activeTab, setActiveTab] = useState('upgrade');
+      const [balance, setBalance] = useState(0);
+      const [multiplier, setMultiplier] = useState(2);
+      const [bet, setBet] = useState(100);
+      const [spinning, setSpinning] = useState(false);
+      const [rotation, setRotation] = useState(0);
+      const [resultModal, setResultModal] = useState(null);
+      
+      const [depositOpen, setDepositOpen] = useState(false);
+      const [withdrawOpen, setWithdrawOpen] = useState(false);
+      const [depositAmount, setDepositAmount] = useState(100);
+      const [withdrawAmount, setWithdrawAmount] = useState(100);
+      const [loadingAction, setLoadingAction] = useState(false);
+
+      useEffect(() => {
+        if (window.Telegram && window.Telegram.WebApp) {
+          window.Telegram.WebApp.ready();
+          window.Telegram.WebApp.expand();
+        }
+        fetchBalance();
+      }, []);
+
+      const getTelegramId = () => {
+        if (window.Telegram?.WebApp?.initDataUnsafe?.user?.id) {
+          return window.Telegram.WebApp.initDataUnsafe.user.id.toString();
+        }
+        return "test_user_123";
+      };
+
+      const fetchBalance = async () => {
+        try {
+          const res = await fetch(`${API_URL}/api/balance/${getTelegramId()}`);
+          const data = await res.json();
+          if (data.success) {
+            setBalance(data.balance);
+          }
+        } catch (err) {
+          console.error("Ошибка загрузки баланса:", err);
+        }
+      };
+
+      const handleDeposit = async () => {
+        const amount = Number(depositAmount);
+        if (!amount || amount < 1) {
+          alert("Введи корректную сумму от 1 ⭐");
+          return;
+        }
+        setLoadingAction(true);
+        try {
+          const res = await fetch(`${API_URL}/api/create-invoice`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ telegramId: getTelegramId(), amount })
+          });
+          const data = await res.json();
+          
+          if (data.success && data.invoiceLink) {
+            setDepositOpen(false);
+            if (window.Telegram?.WebApp?.openInvoice) {
+              window.Telegram.WebApp.openInvoice(data.invoiceLink, (status) => {
+                if (status === 'paid') {
+                  alert("🎉 Оплата прошла успешно! Звёзды зачислены.");
+                  fetchBalance();
+                }
+              });
+            } else {
+              window.open(data.invoiceLink, '_blank');
+            }
+          } else if (data.success) {
+            setDepositOpen(false);
+            alert("✨ Счет отправлен в чат с ботом!");
+          } else {
+            alert("Ошибка: " + (data.error || "Не удалось создать счет"));
+          }
+        } catch (err) {
+          alert("Сервер на Render сейчас просыпается или недоступен. Подожди 20 секунд и попробуй снова.");
+        } finally {
+          setLoadingAction(false);
+        }
+      };
+
+      const handleWithdraw = async () => {
+        const amount = Number(withdrawAmount);
+        if (!amount || amount < 1) {
+          alert("Введи корректную сумму вывода");
+          return;
+        }
+        setLoadingAction(true);
+        try {
+          const res = await fetch(`${API_URL}/api/withdraw`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ telegramId: getTelegramId(), amount })
+          });
+          const data = await res.json();
+          if (data.success) {
+            setBalance(data.newBalance);
+            setWithdrawOpen(false);
+            alert("💸 Заявка на вывод отправлена администратору!");
+          } else {
+            alert("Ошибка: " + (data.error || "Недостаточно средств"));
+          }
+        } catch (err) {
+          alert("Ошибка соединения с сервером.");
+        } finally {
+          setLoadingAction(false);
+        }
+      };
+
+      const winChance = Math.round((1 / multiplier) * 84);
+      const winDeg = Math.round((winChance / 100) * 360);
+      const potentialWin = Math.floor(bet * multiplier);
+
+      const handleUpgrade = () => {
+        if (spinning) return;
+        if (bet < 1) {
+          alert("Минимальная ставка 1 ⭐");
+          return;
+        }
+        if (bet > balance) {
+          alert("⚠️ Недостаточно звёзд на балансе!");
+          return;
+        }
+
+        setSpinning(true);
+        
+        const isWin = Math.random() * 100 < winChance;
+        const extraTurns = 6300;
+        let targetOffset = 0;
+        
+        if (isWin) {
+          targetOffset = Math.floor(Math.random() * (winDeg - 20)) + 10;
+        } else {
+          targetOffset = Math.floor(Math.random() * (360 - winDeg - 30)) + winDeg + 15;
+        }
+        
+        const currentMod = rotation % 360;
+        const distanceToTarget = (360 - currentMod + (360 - targetOffset)) % 360;
+        const finalRotation = rotation + extraTurns + distanceToTarget;
+
+        setRotation(finalRotation);
+
+        setTimeout(() => {
+          setSpinning(false);
+          if (isWin) {
+            setBalance(prev => prev - bet + potentialWin);
+            setResultModal({ type: 'win', amount: potentialWin });
+          } else {
+            setBalance(prev => prev - bet);
+            setResultModal({ type: 'lose', amount: bet });
+          }
+        }, 3200);
+      };
+
+      return (
+        <div className="flex flex-col h-screen bg-[#09080d] text-white font-sans select-none overflow-hidden relative max-w-md mx-auto border-x border-zinc-900">
+          
+          {/* Шапка */}
+          <header className="flex justify-between items-center px-4 py-3 bg-[#110e1b]/95 border-b border-zinc-800/60 z-20">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-[#eab308]/30 to-[#eab308]/10 border border-[#eab308]/50 flex items-center justify-center text-sm font-black text-[#eab308] neon-star">
+                N
+              </div>
+              <div>
+                <span className="font-black tracking-wider text-sm text-white">NEXUS</span>
+                <span className="text-[#eab308] font-black text-sm ml-0.5">UP</span>
+              </div>
+            </div>
+            <div className="bg-[#181424] px-3.5 py-1.5 rounded-2xl border border-zinc-800/80 flex items-center gap-2">
+              <span className="neon-star text-sm">⭐</span>
+              <span className="font-black text-xs text-[#eab308]">{balance.toLocaleString()}</span>
+            </div>
+          </header>
+
+          {/* Основной экран */}
+          <main className="flex-1 p-4 pb-24 overflow-y-auto flex flex-col justify-center items-center">
+            {activeTab === 'upgrade' ? (
+              <div className="flex flex-col items-center w-full max-w-xs">
+                
+                {/* Шанс */}
+                <div className="w-full flex justify-between items-center mb-2.5 px-1">
+                  <span className="text-[11px] text-zinc-400 font-bold uppercase tracking-wider">Шанс победы</span>
+                  <span className="text-xs font-black px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">{winChance}%</span>
+                </div>
+
+                {/* Множители */}
+                <div className="grid grid-cols-5 gap-1.5 w-full mb-5">
+                  {[1.5, 2, 3, 5, 10].map(m => (
+                    <button
+                      key={m}
+                      onClick={() => !spinning && setMultiplier(m)}
+                      className={`py-2.5 rounded-xl font-black text-xs transition-all ${
+                        multiplier === m 
+                          ? 'bg-gradient-to-r from-[#eab308] to-amber-500 text-black shadow-lg shadow-[#eab308]/30 scale-105' 
+                          : 'bg-[#151221] text-zinc-400 border border-zinc-800/80'
+                      }`}
+                    >
+                      {m}x
+                    </button>
+                  ))}
+                </div>
+
+                {/* Рулетка */}
+                <div className="relative w-56 h-56 my-2 flex items-center justify-center">
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-amber-500/20 to-emerald-500/20 blur-xl opacity-70"></div>
+                  
+                  <div 
+                    className="absolute inset-0 rounded-full border-4 border-zinc-800/90 shadow-2xl overflow-hidden"
+                    style={{ 
+                      transform: `rotate(${rotation}deg)`,
+                      transition: spinning ? 'transform 3200ms cubic-bezier(0.08, 0.82, 0.12, 1)' : 'none',
+                      background: `conic-gradient(#10ef85 0deg, #10ef85 ${winDeg}deg, #14111f ${winDeg}deg 360deg)`
+                    }}
+                  ></div>
+
+                  {/* Стрелка строго по центру */}
+                  <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-3 h-6 bg-gradient-to-b from-amber-300 to-[#eab308] z-30 shadow-lg rounded-b-md border border-amber-200"></div>
+
+                  <div className="text-center z-10 flex flex-col items-center bg-[#0e0c17] w-32 h-32 rounded-full border border-zinc-800 justify-center">
+                    <span className="text-[9px] uppercase tracking-widest text-zinc-500 font-bold">Множитель</span>
+                    <span className="text-2xl font-black text-[#eab308] mt-0.5">x{multiplier}</span>
+                    <span className="text-[9px] text-emerald-400 font-semibold mt-0.5">{winChance}% шанс</span>
+                  </div>
+                </div>
+
+                {/* Ставка */}
+                <div className="w-full bg-[#120f1c] border border-zinc-800/80 rounded-2xl p-3.5 mb-4 mt-3">
+                  <div className="flex justify-between items-center mb-1.5">
+                    <span className="text-[11px] text-zinc-400 font-bold uppercase tracking-wider">Сумма ставки</span>
+                    <span className="text-[10px] text-zinc-500 font-semibold">Мин. 1 ⭐</span>
+                  </div>
+                  <div className="flex items-center gap-2 mb-2.5">
+                    <input 
+                      type="number" 
+                      min="1"
+                      value={bet} 
+                      onChange={e => setBet(Math.max(1, Number(e.target.value)))}
+                      className="w-full bg-[#08070d] border border-zinc-800/80 rounded-xl px-3.5 py-2.5 text-sm font-black text-amber-300 focus:outline-none focus:border-[#eab308]"
+                    />
+                    <button onClick={() => setBet(Math.max(1, Math.floor(balance / 2)))} className="bg-[#1a1529] px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-300 border border-zinc-800">1/2</button>
+                    <button onClick={() => setBet(Math.max(1, balance))} className="bg-[#1a1529] px-3 py-2.5 rounded-xl text-xs font-black text-[#eab308] border border-zinc-800">MAX</button>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[100, 500, 1000].map(s => (
+                      <button key={s} onClick={() => setBet(b => b + s)} className="py-2 bg-[#08070d] border border-zinc-800/80 rounded-xl text-xs font-bold text-zinc-300">+{s}</button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Кнопка запуска */}
+                <button 
+                  onClick={handleUpgrade}
+                  disabled={spinning}
+                  className="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-400 via-[#eab308] to-amber-500 text-black font-black text-xs tracking-wider shadow-xl shadow-[#eab308]/25 uppercase flex items-center justify-center gap-2 active:scale-95 transition-all"
+                >
+                  {spinning ? 'Крутим рулетку...' : `🚀 Улучшить баланс · ${bet} ⭐`}
+                </button>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-4 w-full max-w-xs">
+                <div className="bg-[#120f1c] border border-zinc-800/80 rounded-2xl p-6 text-center">
+                  <div className="w-16 h-16 bg-gradient-to-br from-[#eab308]/30 to-amber-600/10 border border-[#eab308]/40 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl text-[#eab308] font-black neon-star">
+                    ⭐
+                  </div>
+                  <h2 className="font-black text-sm text-zinc-100">Игрок Nexus</h2>
+                  <p className="text-xs text-zinc-400 mt-1">Баланс: <strong className="text-[#eab308] text-sm">{balance} ⭐</strong></p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2.5">
+                  <button onClick={() => setDepositOpen(true)} className="py-4 bg-gradient-to-r from-amber-500/20 to-yellow-500/10 border border-amber-500/40 text-[#eab308] font-black rounded-2xl text-xs flex items-center justify-center gap-1.5">
+                    <span className="neon-star">⭐</span> Пополнить
+                  </button>
+                  <button onClick={() => setWithdrawOpen(true)} className="py-4 bg-[#181424] border border-zinc-700/80 text-zinc-200 font-bold rounded-2xl text-xs flex items-center justify-center gap-1.5">
+                    <span>💸</span> Вывести
+                  </button>
+                </div>
+              </div>
+            )}
+          </main>
+
+          {/* Нижнее меню */}
+          <nav className="absolute bottom-0 left-0 right-0 bg-[#110e1b]/95 border-t border-zinc-800/60 p-2.5 flex justify-around z-20">
+            <button onClick={() => setActiveTab('upgrade')} className={`text-xs font-bold px-6 py-2 rounded-xl ${activeTab === 'upgrade' ? 'text-[#eab308] bg-[#1a1528]' : 'text-zinc-500'}`}>🎯 Рулетка</button>
+            <button onClick={() => setActiveTab('profile')} className={`text-xs font-bold px-6 py-2 rounded-xl ${activeTab === 'profile' ? 'text-[#eab308] bg-[#1a1528]' : 'text-zinc-500'}`}>👤 Профиль</button>
+          </nav>
+
+          {/* Модалка результата */}
+          {resultModal && (
+            <div className="absolute inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div className="bg-[#120f1c] border border-zinc-800 rounded-3xl p-7 w-full max-w-xs text-center shadow-2xl modal-animation">
+                <div className="text-5xl mb-3 neon-star inline-block">{resultModal.type === 'win' ? '💎' : '🥀'}</div>
+                <h3 className={`text-xl font-black uppercase ${resultModal.type === 'win' ? 'text-[#eab308]' : 'text-rose-400'}`}>
+                  {resultModal.type === 'win' ? 'ПОБЕДА!' : 'НЕУДАЧА'}
+                </h3>
+                <p className="text-xs text-zinc-400 mt-2">
+                  {resultModal.type === 'win' ? `Выигрыш: +${resultModal.amount} ⭐` : `Потеряно: ${resultModal.amount} ⭐`}
+                </p>
+                <button onClick={() => setResultModal(null)} className="mt-6 w-full py-3.5 bg-gradient-to-r from-amber-400 to-[#eab308] text-black font-black rounded-2xl text-xs uppercase">Продолжить</button>
+              </div>
+            </div>
+          )}
+
+          {/* Модалка пополнения */}
+          {depositOpen && (
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-end justify-center">
+              <div className="bg-[#120f1c] border-t border-zinc-800 rounded-t-3xl p-5 w-full max-w-md modal-animation">
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="font-black text-xs text-zinc-200 uppercase">Пополнение звёздами ⭐</h3>
+                  <button onClick={() => setDepositOpen(false)} className="text-zinc-500 font-bold text-sm">✕</button>
+                </div>
+                <input 
+                  type="number" 
+                  min="1"
+                  value={depositAmount} 
+                  onChange={e => setDepositAmount(e.target.value)}
+                  className="w-full bg-[#08070d] border border-zinc-800 rounded-xl px-3.5 py-3 text-sm font-black text-amber-300 mb-3 focus:outline-none focus:border-[#eab308]"
+                />
+                <button 
+                  onClick={handleDeposit} 
+                  disabled={loadingAction}
+                  className="w-full py-4 bg-gradient-to-r from-amber-400 to-[#eab308] text-black font-black rounded-xl text-xs uppercase"
+                >
+                  {loadingAction ? 'Создаем счет...' : `Создать счет на ${depositAmount} ⭐`}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Модалка вывода */}
+          {withdrawOpen && (
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-end justify-center">
+              <div className="bg-[#120f1c] border-t border-zinc-800 rounded-t-3xl p-5 w-full max-w-md modal-animation">
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="font-black text-xs text-zinc-200 uppercase">Вывод звёзд 💸</h3>
+                  <button onClick={() => setWithdrawOpen(false)} className="text-zinc-500 font-bold text-sm">✕</button>
+                </div>
+                <input 
+                  type="number" 
+                  min="1"
+                  value={withdrawAmount} 
+                  onChange={e => setWithdrawAmount(e.target.value)}
+                  className="w-full bg-[#08070d] border border-zinc-800 rounded-xl px-3.5 py-3 text-sm font-black text-white mb-3 focus:outline-none focus:border-zinc-500"
+                />
+                <button 
+                  onClick={handleWithdraw} 
+                  disabled={loadingAction}
+                  className="w-full py-4 bg-zinc-800 text-white font-black rounded-xl text-xs uppercase border border-zinc-700"
+                >
+                  {loadingAction ? 'Отправляем заявку...' : `Запросить вывод ${withdrawAmount} ⭐`}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+  </html>
+  
