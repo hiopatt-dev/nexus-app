@@ -3,48 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexus UP — Premium</title>
+    <title>NexusUp</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap');
         
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #050304;
-            background-image: 
-                radial-gradient(circle at 50% -20%, #2a080c 0%, transparent 60%),
-                radial-gradient(circle at 10% 110%, #150204 0%, transparent 50%);
+            background-color: #0c0a09;
+            background-image: radial-gradient(circle at 50% -10%, #1c1511 0%, #0c0a09 70%);
             color: #f3f4f6;
             overflow-x: hidden;
         }
 
-        /* Премиальное свечение */
-        .glow-card {
-            box-shadow: 0 0 30px rgba(220, 38, 38, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        .gold-glow {
+            box-shadow: 0 0 25px rgba(245, 158, 11, 0.2);
         }
         
-        .glow-button {
-            box-shadow: 0 4px 20px rgba(220, 38, 38, 0.4);
+        .gold-btn-glow {
+            box-shadow: 0 4px 25px rgba(245, 158, 11, 0.4);
         }
 
-        /* Плавные анимации в стиле TG Premium */
-        @keyframes float {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-8px) rotate(2deg); }
-        }
-        .animate-float {
-            animation: float 4s ease-in-out infinite;
-        }
-
-        @keyframes pulseGlow {
-            0%, 100% { opacity: 0.4; transform: scale(1); }
-            50% { opacity: 0.8; transform: scale(1.03); }
-        }
-        .animate-pulse-glow {
-            animation: pulseGlow 3s ease-in-out infinite;
-        }
-
+        /* Анимация вращения колеса */
         @keyframes wheelSpin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(1800deg); }
@@ -53,118 +34,125 @@
             animation: wheelSpin 2.5s cubic-bezier(0.15, 0.85, 0.25, 1) forwards;
         }
 
-        /* Стеклянный эффект */
-        .glass-panel {
-            background: rgba(18, 11, 13, 0.7);
+        .glass-card {
+            background: rgba(20, 17, 15, 0.85);
             backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
     </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between pb-24 select-none">
 
-    <!-- Верхняя шапка (Glassmorphism) -->
-    <header class="w-full px-5 py-4 flex justify-between items-center glass-panel sticky top-0 z-40 border-b border-red-950/30">
+    <!-- Шапка приложения -->
+    <header class="w-full px-4 py-3.5 flex justify-between items-center bg-[#0c0a09]/90 backdrop-blur-md sticky top-0 z-40 border-b border-zinc-900">
         <div class="flex items-center gap-2.5">
-            <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-red-600 to-rose-500 flex items-center justify-center font-black text-white shadow-lg shadow-red-900/50 animate-float">
+            <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-400 flex items-center justify-center font-black text-black shadow-lg shadow-amber-500/30">
                 N
             </div>
-            <div>
-                <span class="text-base font-black tracking-wider text-white">NEXUS</span>
-                <span class="text-[9px] bg-red-500/20 text-red-400 border border-red-500/30 px-1.5 py-0.5 rounded-full font-bold uppercase ml-1">PRO</span>
-            </div>
+            <span class="text-lg font-extrabold tracking-tight text-white">NexusUp</span>
         </div>
         
-        <div class="flex items-center gap-2 glass-panel px-3.5 py-1.5 rounded-2xl border border-red-900/30">
-            <span class="text-amber-400 text-sm font-black" id="headerBalance">0 ⭐</span>
-            <button onclick="openDepositModal()" class="w-6 h-6 bg-red-600 hover:bg-red-500 rounded-full flex items-center justify-center text-white font-bold text-xs transition shadow-md shadow-red-900/50 active:scale-95">+</button>
+        <div class="flex items-center gap-2 bg-zinc-900/90 border border-zinc-800 px-3.5 py-1.5 rounded-2xl gold-glow">
+            <span class="text-amber-400 text-sm font-black" id="headerBalance">⭐ 2 172</span>
+            <button onclick="openDepositModal()" class="w-6 h-6 bg-amber-500 hover:bg-amber-400 rounded-full flex items-center justify-center text-black font-black text-sm transition shadow-md">+</button>
         </div>
     </header>
 
-    <!-- Основной интерфейс -->
-    <main class="w-full max-w-md mx-auto p-4 flex flex-col gap-5 my-auto">
+    <!-- Основной контент -->
+    <main class="w-full max-w-md mx-auto p-4 flex flex-col gap-4 my-auto">
 
-        <!-- Карточка баланса с живым фоном -->
-        <div class="glass-panel rounded-3xl p-6 glow-card relative overflow-hidden flex flex-col gap-4">
-            <div class="absolute -right-12 -bottom-12 w-40 h-40 bg-red-600/15 rounded-full blur-3xl pointer-events-none animate-pulse-glow"></div>
-            
-            <div class="flex justify-between items-center relative z-10">
-                <div>
-                    <div class="flex items-center gap-1.5">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <p class="text-[11px] text-zinc-400 uppercase tracking-widest font-bold">Основной счет</p>
-                    </div>
-                    <h1 class="text-4xl font-black text-white mt-1 tracking-tight" id="mainBalance">0 ⭐</h1>
-                </div>
-                <div class="flex flex-col gap-2">
-                    <button onclick="openDepositModal()" class="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white px-4 py-2.5 rounded-2xl font-bold text-xs transition glow-button active:scale-95">Пополнить</button>
-                    <button onclick="openWithdrawModal()" class="glass-panel hover:bg-zinc-800/80 text-zinc-300 px-4 py-2.5 rounded-2xl font-bold text-xs transition border border-zinc-700/50 active:scale-95">Вывод</button>
-                </div>
-            </div>
+        <!-- Выбор множителей сверху -->
+        <div class="flex justify-between gap-1.5 overflow-x-auto py-1 scrollbar-none">
+            <button onclick="setMultiplier(1.5, 65, this)" data-mult="1.5" class="mult-btn flex-1 min-w-[55px] py-2.5 rounded-2xl font-bold text-xs bg-zinc-900 text-zinc-400 border border-zinc-800/80 transition active:scale-95">x1.5</button>
+            <button onclick="setMultiplier(2, 42, this)" data-mult="2" class="mult-btn flex-1 min-w-[55px] py-2.5 rounded-2xl font-bold text-xs bg-amber-500 text-black border border-amber-400 transition active:scale-95 gold-glow">x2</button>
+            <button onclick="setMultiplier(3, 28, this)" data-mult="3" class="mult-btn flex-1 min-w-[55px] py-2.5 rounded-2xl font-bold text-xs bg-zinc-900 text-zinc-400 border border-zinc-800/80 transition active:scale-95">x3</button>
+            <button onclick="setMultiplier(5, 16, this)" data-mult="5" class="mult-btn flex-1 min-w-[55px] py-2.5 rounded-2xl font-bold text-xs bg-zinc-900 text-zinc-400 border border-zinc-800/80 transition active:scale-95">x5</button>
+            <button onclick="setMultiplier(10, 8, this)" data-mult="10" class="mult-btn flex-1 min-w-[55px] py-2.5 rounded-2xl font-bold text-xs bg-zinc-900 text-zinc-400 border border-zinc-800/80 transition active:scale-95">x10</button>
         </div>
 
-        <!-- Игровой модуль: Рулетка -->
-        <div class="glass-panel rounded-3xl p-6 glow-card flex flex-col items-center gap-5 relative">
-            <div class="w-full flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <span class="text-lg">🎯</span>
-                    <h2 class="font-bold text-sm tracking-wide text-zinc-200">Колесо Удачи</h2>
-                </div>
-                <span class="text-[10px] text-red-400 bg-red-950/60 border border-red-900/40 px-2.5 py-1 rounded-xl font-bold tracking-wide">MULTIX</span>
+        <!-- Игровой блок с колесом -->
+        <div class="glass-card rounded-3xl p-5 shadow-2xl flex flex-col items-center gap-4 relative overflow-hidden">
+            
+            <div class="w-full flex justify-between items-center text-xs">
+                <span class="text-zinc-400 font-medium">Шанс выигрыша</span>
+                <span id="winChanceText" class="text-emerald-400 font-bold">42%</span>
             </div>
 
-            <!-- Премиальное колесо с анимацией -->
-            <div class="relative w-36 h-36 my-1 flex items-center justify-center">
-                <!-- Указатель -->
-                <div class="absolute -top-3 z-20 w-5 h-5 bg-red-500 rotate-45 border-2 border-zinc-950 shadow-lg shadow-red-500/50"></div>
+            <!-- Колесо рулетки -->
+            <div class="relative w-56 h-56 my-2 flex items-center justify-center">
+                <!-- Указатель сверху -->
+                <div class="absolute -top-1 z-20 w-5 h-5 bg-amber-400 rotate-45 border-2 border-zinc-950 shadow-md"></div>
                 
-                <!-- Внешнее кольцо свечения -->
-                <div class="absolute inset-0 rounded-full bg-gradient-to-tr from-red-600/30 to-rose-500/10 blur-md animate-pulse-glow"></div>
+                <!-- SVG Колесо с секторами -->
+                <div id="rouletteWheel" class="w-52 h-52 rounded-full relative flex items-center justify-center shadow-2xl overflow-hidden border-4 border-zinc-800 bg-zinc-950">
+                    <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                        <!-- Примерные сектора рулетки -->
+                        <circle cx="50" cy="50" r="40" fill="transparent" stroke="#27272a" stroke-width="20" />
+                        <circle id="wheelArc" cx="50" cy="50" r="40" fill="transparent" stroke="#10b981" stroke-width="20" stroke-dasharray="251.2" stroke-dashoffset="145" class="transition-all duration-500" />
+                    </svg>
 
-                <!-- Колесо -->
-                <div id="rouletteWheel" class="w-32 h-32 rounded-full border-2 border-red-500/40 bg-gradient-to-br from-zinc-900 via-[#14080a] to-red-950 flex items-center justify-center shadow-2xl relative overflow-hidden">
-                    <div class="absolute inset-0 opacity-20 bg-[radial-gradient(#ef4444_1px,transparent_1px)] [background-size:8px_8px]"></div>
-                    <div class="w-12 h-12 rounded-full bg-zinc-950 border border-red-500/50 flex items-center justify-center shadow-inner z-10">
-                        <span class="text-xs font-black text-red-500 animate-float">⭐</span>
+                    <!-- Внутренний круг с текстом -->
+                    <div class="absolute w-32 h-32 rounded-full bg-zinc-900 flex flex-col items-center justify-center shadow-inner border border-zinc-800">
+                        <span class="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Множитель</span>
+                        <span id="wheelMultiplierText" class="text-2xl font-black text-amber-400 my-0.5">x2</span>
+                        <span id="wheelChanceText" class="text-[10px] text-zinc-400 font-semibold">Шанс 42%</span>
                     </div>
                 </div>
             </div>
-            
-            <div class="w-full flex flex-col gap-2">
-                <label class="text-xs text-zinc-400 font-semibold pl-1">Сумма ставки (⭐)</label>
-                <input type="number" id="betAmount" value="100" class="w-full bg-black/50 border border-zinc-800/80 rounded-2xl p-3.5 text-white font-bold text-sm focus:outline-none focus:border-red-500 transition shadow-inner">
+
+            <!-- Блок ввода ставки -->
+            <div class="w-full flex flex-col gap-2.5">
+                <div class="flex justify-between items-center text-xs">
+                    <span class="text-zinc-400 font-medium">Сумма ставки</span>
+                    <span class="text-zinc-500 font-semibold">Мин. 10 ⭐</span>
+                </div>
+
+                <div class="relative flex items-center">
+                    <input type="number" id="betAmount" value="100" oninput="updatePotentialWin()" class="w-full bg-zinc-950 border border-zinc-800 rounded-2xl py-3.5 px-4 text-white font-black text-lg focus:outline-none focus:border-amber-500 transition shadow-inner">
+                    <div class="absolute right-3 flex gap-1.5">
+                        <button onclick="setBetFraction(2)" class="px-2.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-xl text-xs font-bold border border-zinc-800 transition">½</button>
+                        <button onclick="setBetMax()" class="px-2.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-amber-400 rounded-xl text-xs font-bold border border-zinc-800 transition">MAX</button>
+                    </div>
+                </div>
+
+                <!-- Быстрые суммы -->
+                <div class="grid grid-cols-3 gap-2 mt-1">
+                    <button onclick="setBet(100)" class="py-2.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-xl font-bold text-xs border border-zinc-800 transition">100</button>
+                    <button onclick="setBet(500)" class="py-2.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-xl font-bold text-xs border border-zinc-800 transition">500</button>
+                    <button onclick="setBet(1000)" class="py-2.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-xl font-bold text-xs border border-zinc-800 transition">1000</button>
+                </div>
             </div>
 
-            <div class="w-full flex flex-col gap-2">
-                <label class="text-xs text-zinc-400 font-semibold pl-1">Выбрать множитель</label>
-                <select id="multiplier" class="w-full bg-black/50 border border-zinc-800/80 rounded-2xl p-3.5 text-white font-bold text-sm focus:outline-none focus:border-red-500 transition cursor-pointer">
-                    <option value="2" data-chance="48">x2 (Шанс 48%)</option>
-                    <option value="5" data-chance="19">x5 (Шанс 19%)</option>
-                    <option value="10" data-chance="9">x10 (Шанс 9%)</option>
-                </select>
+            <!-- Возможный выигрыш -->
+            <div class="w-full flex justify-between items-center px-1 text-xs">
+                <span class="text-zinc-400 flex items-center gap-1 font-medium">
+                    <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                    Возможный выигрыш
+                </span>
+                <span id="potentialWin" class="text-amber-400 font-black text-sm">+200 ⭐</span>
             </div>
 
-            <button id="betButton" onclick="makeBet()" class="w-full bg-gradient-to-r from-red-600 via-rose-600 to-red-700 hover:from-red-500 hover:to-rose-500 text-white font-black py-4 rounded-2xl transition glow-button active:scale-98 tracking-wider uppercase text-sm">
-                Крутить рулетку
+            <!-- Главная кнопка действия -->
+            <button id="betButton" onclick="makeBet()" class="w-full bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-black font-black py-4 rounded-2xl transition gold-btn-glow active:scale-98 tracking-wide text-sm uppercase">
+                Улучшить · 100 ⭐
             </button>
 
-            <div id="resultLog" class="text-center text-xs font-bold h-5 tracking-wide"></div>
+            <div id="resultLog" class="text-center text-xs font-bold h-4"></div>
         </div>
 
     </main>
 
-    <!-- Нижняя панель навигации (Dock Style) -->
-    <nav class="fixed bottom-3 left-4 right-4 glass-panel rounded-3xl py-3 px-6 flex justify-around items-center z-50 border border-red-950/40 shadow-2xl">
-        <a href="#" class="flex flex-col items-center gap-1 text-red-500 transition transform hover:scale-105">
+    <!-- Нижняя навигация -->
+    <nav class="fixed bottom-3 left-4 right-4 glass-card rounded-3xl py-3 px-6 flex justify-around items-center z-50 border border-zinc-800/80 shadow-2xl">
+        <a href="#" class="flex flex-col items-center gap-1 text-amber-400 transition">
             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
             <span class="text-[10px] font-bold">Главная</span>
         </a>
-        <a href="#" onclick="openDepositModal(); return false;" class="flex flex-col items-center gap-1 text-zinc-400 hover:text-zinc-200 transition transform hover:scale-105">
+        <a href="#" onclick="openDepositModal(); return false;" class="flex flex-col items-center gap-1 text-zinc-500 hover:text-zinc-300 transition">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
             <span class="text-[10px] font-semibold">Касса</span>
         </a>
-        <a href="#" onclick="openWithdrawModal(); return false;" class="flex flex-col items-center gap-1 text-zinc-400 hover:text-zinc-200 transition transform hover:scale-105">
+        <a href="#" onclick="openWithdrawModal(); return false;" class="flex flex-col items-center gap-1 text-zinc-500 hover:text-zinc-300 transition">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a1 1 0 11-2 0 1 1 0 012 0z"/></svg>
             <span class="text-[10px] font-semibold">Вывод</span>
         </a>
@@ -172,13 +160,13 @@
 
     <!-- Модальное окно вывода -->
     <div id="withdrawModal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 z-50">
-        <div class="glass-panel border border-red-900/40 rounded-3xl p-6 w-full max-w-xs flex flex-col gap-4 glow-card">
+        <div class="glass-card border border-zinc-800 rounded-3xl p-6 w-full max-w-xs flex flex-col gap-4 gold-glow">
             <div class="text-center">
-                <h3 class="font-extrabold text-lg text-white">Вывод средств</h3>
-                <p class="text-[11px] text-zinc-400 mt-0.5">Заявка уйдет администратору</p>
+                <h3 class="font-extrabold text-lg text-white">Запрос на вывод</h3>
+                <p class="text-[11px] text-zinc-400 mt-0.5">Звезды придут через администратора</p>
             </div>
-            <input type="number" id="withdrawAmount" placeholder="Сумма звезд" class="w-full bg-black/60 border border-zinc-800 rounded-2xl p-3.5 text-white font-bold text-sm focus:outline-none focus:border-red-500">
-            <button onclick="requestWithdraw()" class="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3.5 rounded-2xl transition glow-button active:scale-95 text-xs uppercase tracking-wider">Отправить заявку</button>
+            <input type="number" id="withdrawAmount" placeholder="Количество звезд" class="w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-3.5 text-white font-bold text-sm focus:outline-none focus:border-amber-500">
+            <button onclick="requestWithdraw()" class="w-full bg-amber-500 hover:bg-amber-400 text-black font-black py-3.5 rounded-2xl transition gold-btn-glow active:scale-95 text-xs uppercase tracking-wider">Отправить заявку</button>
             <button onclick="closeWithdrawModal()" class="text-zinc-500 text-xs hover:text-zinc-300 transition text-center font-semibold">Отмена</button>
         </div>
     </div>
@@ -190,42 +178,94 @@
         const telegramId = tg.initDataUnsafe?.user?.id || "test_user_123";
         const API_URL = "https://nexus-up-backend.onrender.com/api";
 
+        let currentMultiplier = 2;
+        let currentChance = 42;
+        let userBalance = 0;
+
         async function fetchBalance() {
             try {
                 const res = await fetch(`${API_URL}/balance/${telegramId}`);
                 const data = await res.json();
                 if (data.success) {
-                    document.getElementById('mainBalance').innerText = `${data.balance} ⭐`;
-                    document.getElementById('headerBalance').innerText = `${data.balance} ⭐`;
+                    userBalance = data.balance;
+                    document.getElementById('mainBalance')?.innerText = `⭐ ${userBalance}`;
+                    document.getElementById('headerBalance').innerText = `⭐ ${userBalance}`;
                 }
             } catch (e) {
                 console.error("Ошибка загрузки баланса");
             }
         }
 
+        function setMultiplier(mult, chance, btn) {
+            currentMultiplier = mult;
+            currentChance = chance;
+
+            // Пересвет кнопок
+            document.querySelectorAll('.mult-btn').forEach(b => {
+                b.className = "mult-btn flex-1 min-w-[55px] py-2.5 rounded-2xl font-bold text-xs bg-zinc-900 text-zinc-400 border border-zinc-800/80 transition active:scale-95";
+            });
+            btn.className = "mult-btn flex-1 min-w-[55px] py-2.5 rounded-2xl font-bold text-xs bg-amber-500 text-black border border-amber-400 transition active:scale-95 gold-glow";
+
+            // Обновление текстов и дуги колеса
+            document.getElementById('winChanceText').innerText = `${chance}%`;
+            document.getElementById('wheelMultiplierText').innerText = `x${mult}`;
+            document.getElementById('wheelChanceText').innerText = `Шанс ${chance}%`;
+
+            // Меняем длину дуги SVG (251.2 общая длина окружности)
+            const offset = 251.2 - (251.2 * chance / 100);
+            document.getElementById('wheelArc').style.strokeDashoffset = offset;
+
+            updatePotentialWin();
+        }
+
+        function setBet(val) {
+            document.getElementById('betAmount').value = val;
+            updatePotentialWin();
+        }
+
+        function setBetFraction(div) {
+            const input = document.getElementById('betAmount');
+            input.value = Math.max(10, Math.floor(parseInt(input.value || 0) / div));
+            updatePotentialWin();
+        }
+
+        function setBetMax() {
+            document.getElementById('betAmount').value = Math.max(10, userBalance);
+            updatePotentialWin();
+        }
+
+        function updatePotentialWin() {
+            const amount = parseInt(document.getElementById('betAmount').value) || 0;
+            const potential = Math.floor(amount * currentMultiplier);
+            document.getElementById('potentialWin').innerText = `+${potential} ⭐`;
+            document.getElementById('betButton').innerText = `Улучшить · ${amount} ⭐`;
+        }
+
         async function makeBet() {
             const amount = parseInt(document.getElementById('betAmount').value);
-            const select = document.getElementById('multiplier');
-            const multiplier = parseFloat(select.value);
-            const winChance = parseFloat(select.options[select.selectedIndex].getAttribute('data-chance'));
             const wheel = document.getElementById('rouletteWheel');
             const betBtn = document.getElementById('betButton');
             const log = document.getElementById('resultLog');
 
-            if (!amount || amount <= 0) {
-                alert("Введите корректную сумму ставки");
+            if (!amount || amount < 10) {
+                alert("Минимальная ставка 10 звезд");
                 return;
             }
 
             betBtn.disabled = true;
             wheel.classList.add('spinning-wheel');
-            log.innerHTML = `<span class="text-amber-400 animate-pulse">⚡ Колесо вращается...</span>`;
+            log.innerHTML = `<span class="text-amber-400 animate-pulse">Крутим колесо...</span>`;
 
             try {
                 const res = await fetch(`${API_URL}/upgrade`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ telegramId, amount, multiplier, winChance })
+                    body: JSON.stringify({ 
+                        telegramId, 
+                        amount, 
+                        multiplier: currentMultiplier, 
+                        winChance: currentChance 
+                    })
                 });
                 const data = await res.json();
                 
@@ -234,12 +274,12 @@
                     betBtn.disabled = false;
 
                     if (data.success) {
-                        document.getElementById('mainBalance').innerText = `${data.newBalance} ⭐`;
-                        document.getElementById('headerBalance').innerText = `${data.newBalance} ⭐`;
+                        userBalance = data.newBalance;
+                        document.getElementById('headerBalance').innerText = `⭐ ${userBalance}`;
                         if (data.win) {
-                            log.innerHTML = `<span class="text-emerald-400 font-extrabold text-sm">🎉 Победа! +${data.payout} ⭐</span>`;
+                            log.innerHTML = `<span class="text-emerald-400">Победа! +${data.payout} ⭐</span>`;
                         } else {
-                            log.innerHTML = `<span class="text-rose-500 font-extrabold text-sm">😢 Проигрыш (-${amount} ⭐)</span>`;
+                            log.innerHTML = `<span class="text-rose-500">Проигрыш (-${amount} ⭐)</span>`;
                         }
                     } else {
                         alert(data.error);
@@ -272,9 +312,9 @@
                 });
                 const data = await res.json();
                 if (data.success) {
-                    document.getElementById('mainBalance').innerText = `${data.newBalance} ⭐`;
-                    document.getElementById('headerBalance').innerText = `${data.newBalance} ⭐`;
-                    alert("Заявка на вывод успешно отправлена администратору!");
+                    userBalance = data.newBalance;
+                    document.getElementById('headerBalance').innerText = `⭐ ${userBalance}`;
+                    alert("Заявка на вывод отправлена администратору!");
                     closeWithdrawModal();
                 } else {
                     alert(data.error);
@@ -297,7 +337,7 @@
                 if (data.success && data.data?.invoice_url) {
                     window.open(data.data.invoice_url, '_blank');
                 } else {
-                    alert("Счет успешно создан в боте!");
+                    alert("Не удалось создать счет. Проверьте BOT_TOKEN на сервере.");
                 }
             } catch (e) {
                 alert("Ошибка создания инвойса");
@@ -305,6 +345,7 @@
         }
 
         fetchBalance();
+        updatePotentialWin();
     </script>
 </body>
 </html>
